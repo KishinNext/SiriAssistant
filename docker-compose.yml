@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+#  app:
+#    container_name: siri_assistant_app
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    volumes:
+#      - .:/app
+#    ports:
+#      - '8080:8080'
+  siri_assistant_database:
+    container_name: siri_assistant_db
+    mem_limit: 100m
+    cpuset: "0"
+    image: ankane/pgvector
+    environment:
+      - POSTGRES_DB=siri_assistant
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_USER=gg
+    ports:
+      - "5432:5432"
+    volumes:
+      - siri_assistant:/var/lib/postgresql/data
+      - ./db_init:/docker-entrypoint-initdb.d
+    restart: no
+volumes:
+  siri_assistant:

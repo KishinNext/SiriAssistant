@@ -8,6 +8,7 @@ class FunctionsAvailables(StrEnum):
     Enum with the available functions
     """
     OPEN_PYCHARM_PROJECTS = "open_pycharm_projects"
+    SEARCH_WEB = "search_web"
 
 
 class FunctionPayload(BaseModel):

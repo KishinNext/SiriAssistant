@@ -2,6 +2,7 @@ import difflib
 import logging
 import os
 import re
+import webbrowser
 
 from src.auth.utils import get_secrets
 from src.models.functions import FunctionPayload, FunctionResult, FunctionsAvailables
@@ -29,6 +30,8 @@ async def return_output_functions(
 ) -> FunctionResult:
     if func_payload.function_name == FunctionsAvailables.OPEN_PYCHARM_PROJECTS:
         result_function = await open_pycharm_projects(func_payload, **kwargs)
+    elif func_payload.function_name == FunctionsAvailables.SEARCH_WEB:
+        result_function = await search_web(func_payload, **kwargs)
     else:
         raise Exception(f"Function {func_payload.function_name} not found")
     return result_function
@@ -53,17 +56,16 @@ async def open_pycharm_projects(func_params: FunctionPayload, **kwargs: dict) ->
 
         matches = find_top_project_matches(pycharm_project, all_folders)
 
-        if not matches:
-            raise Exception(f'No project found for {pycharm_project}')
-
         if len(list(matches.keys())) == 1:
             message = f'Opening pycharm project {list(matches.keys())[0]} successfully.'
 
             os.system(f'pycharm {list(matches.values())[0][0]}')
 
-        else:
+        elif len(list(matches.keys())) > 1:
             message = f'Found multiple projects for {pycharm_project}, please be more specific. Here is the the nearest' \
                       f' matches: {list(matches.keys())}'
+        else:
+            message = f'No project found for {pycharm_project}'
 
         return FunctionResult(
             function_id=func_params.function_id,
@@ -72,14 +74,40 @@ async def open_pycharm_projects(func_params: FunctionPayload, **kwargs: dict) ->
             traceback=None
         )
     except Exception as e:
-        client.beta.threads.runs.cancel(
-            thread_id=func_params.thread_id,
-            run_id=func_params.run_id
-        )
+        # client.beta.threads.runs.cancel(
+        #     thread_id=func_params.thread_id,
+        #     run_id=func_params.run_id
+        # )
         logging.error(f"Error in open_pycharm_projects: {e}, the run function es closed")
         return FunctionResult(
             function_id=func_params.function_id,
             output={'message': 'Error in open_pycharm_projects'},
+            metadata={},
+            traceback=str(e)
+        )
+
+
+async def search_web(func_params: FunctionPayload, **kwargs: dict) -> FunctionResult:
+    try:
+        url = func_params.function_params.get('url', None)
+
+        webbrowser.open(url, new=1, autoraise=True)
+
+        return FunctionResult(
+            function_id=func_params.function_id,
+            output={'message': 'Successfully opened the browser'},
+            metadata={},
+            traceback=None
+        )
+    except Exception as e:
+        # client.beta.threads.runs.cancel(
+        #     thread_id=func_params.thread_id,
+        #     run_id=func_params.run_id
+        # )
+        logging.error(f"Error in search_web: {e}, the run function es closed")
+        return FunctionResult(
+            function_id=func_params.function_id,
+            output={'message': 'Fail to open in the browser'},
             metadata={},
             traceback=str(e)
         )

@@ -1,7 +1,6 @@
 import json
 import logging
 import re
-import time
 from datetime import datetime
 
 from src.models.assistant_selector import AssistantSelectorModel
@@ -70,7 +69,6 @@ async def post_messages(messages: AssistantSelectorModel):
                 )
             except Exception as e:
                 pass
-
 
     openai_response = client.beta.threads.messages.list(
         thread_id=thread.id,

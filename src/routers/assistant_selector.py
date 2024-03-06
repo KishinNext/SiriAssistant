@@ -20,9 +20,9 @@ router = APIRouter(
     response_model_exclude_none=False,
     dependencies=[Depends(api_key_auth)]
 )
-async def get_all(messages: AssistantSelectorModel) -> ResponseSchema | ErrorResponseSchema:
+async def get_all(payload: AssistantSelectorModel) -> ResponseSchema | ErrorResponseSchema:
     try:
-        result = await service.post_messages(messages)
+        result = await service.post_messages(payload)
         logging.info(result)
         return ResponseSchema(
             status_code=200,

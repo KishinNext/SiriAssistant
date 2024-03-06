@@ -8,3 +8,4 @@ class Message(BaseModel):
 
 class AssistantSelectorModel(BaseModel):
     messages: list[Message] = Field(..., description="List of messages")
+    clipboard: str | None = Field(None, description="Clipboard content")

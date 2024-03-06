@@ -11,16 +11,22 @@ from src.service.openai import get_assistants
 from src.service.threads import get_thread
 
 
-async def post_messages(messages: AssistantSelectorModel):
+async def post_messages(payload: AssistantSelectorModel):
     thread = await get_thread()
     assistant = get_assistants()['SiriSelectorAssistant']
 
-    for message in messages.messages:
+    for message in payload.messages:
         client.beta.threads.messages.create(
             thread_id=thread.id,
             role=message.role,
             content=message.content
         )
+        if payload.clipboard != '':
+            client.beta.threads.messages.create(
+                thread_id=thread.id,
+                role='user',
+                content="CLIPBOARD TEXT: " + str(payload.clipboard)
+            )
 
     run = client.beta.threads.runs.create(
         thread_id=thread.id,
@@ -70,6 +76,9 @@ async def post_messages(messages: AssistantSelectorModel):
             except Exception as e:
                 pass
 
+        elif run_status.status == 'failed':
+            raise Exception('Run failed')
+
     openai_response = client.beta.threads.messages.list(
         thread_id=thread.id,
         limit=10,
@@ -80,8 +89,8 @@ async def post_messages(messages: AssistantSelectorModel):
 
     try:
         content = json.loads(data['content'][0]['text']['value'].replace('```json', '').replace('```', ''))
-    except json.JSONDecodeError:
-        raise Exception('OpenAI response is not a valid JSON')
+    except json.JSONDecodeError as e:
+        raise Exception('OpenAI response is not a valid JSON' + str(e))
 
     question_pattern = r'[^.?!]*\?'
 

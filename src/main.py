@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from fastapi import Depends, FastAPI, HTTPException, status
@@ -5,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.auth.service import api_key_auth
 from src.auth.utils import get_config, get_secrets, setup_logging
+from src.data.utils import check_connection
 from src.routers import assistant_selector
 
 app = FastAPI(
@@ -52,24 +54,19 @@ async def root():
     return {"message": "Everything is fine."}
 
 
-def initialize_app():
+async def initialize_app():
     logging.info('Initializing application...')
 
     from src.auth.spotify import get_spotify_client
 
-    logging.info('Initializing Spotify config...')
+    logging.info('Check the necessary config...')
     get_spotify_client()
+    await check_connection()
     logging.info('Application initialized')
-
-    # db_connection_successful = db_utils.check_connection(config['database'])
-    # if db_connection_successful:
-    #     logging.info('Database connection successful')
-    # else:
-    #     logging.error('Unable to connect to the database. Please check your configuration.')
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    initialize_app()
+    asyncio.run(initialize_app())
     uvicorn.run("main:app", reload=True, host="0.0.0.0", port=8080)

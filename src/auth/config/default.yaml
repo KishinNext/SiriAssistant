@@ -20,6 +20,6 @@ logging:
       handlers:
           - console
 threads:
-  expiration: 60 # Minutes
+  expiration: 10 # Minutes
 assistants:
   - name: "SiriSelectorAssistant"

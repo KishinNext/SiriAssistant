@@ -59,7 +59,6 @@ async def post_messages(payload: AssistantSelectorModel):
                             function_params=json.loads(function_call.function.arguments)
                         )
                     )
-
                     tool_outputs.append(
                         {
                             "tool_call_id": function_call.id,
@@ -68,6 +67,7 @@ async def post_messages(payload: AssistantSelectorModel):
                     )
 
             try:
+                logging.info(f'Tools result: {tool_outputs}')
                 run = client.beta.threads.runs.submit_tool_outputs(
                     thread_id=thread.id,
                     run_id=run.id,
@@ -86,7 +86,7 @@ async def post_messages(payload: AssistantSelectorModel):
     )
 
     data = openai_response.data[0].model_dump()
-
+    logging.info(f'OpenAI raw response: {data}')
     try:
         content = json.loads(data['content'][0]['text']['value'].replace('```json', '').replace('```', ''))
     except json.JSONDecodeError as e:

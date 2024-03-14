@@ -9,6 +9,7 @@ class FunctionsAvailables(StrEnum):
     """
     OPEN_PYCHARM_PROJECTS = "open_pycharm_projects"
     SEARCH_WEB = "search_web"
+    PLAY_SPOTIFY_MUSIC = "play_spotify_music"
 
 
 class FunctionPayload(BaseModel):

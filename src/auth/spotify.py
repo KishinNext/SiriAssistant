@@ -2,7 +2,7 @@ import logging
 
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth, SpotifyOauthError
-
+from spotipy.cache_handler import MemoryCacheHandler
 from src.auth.utils import get_secrets
 
 secrets = get_secrets()
@@ -26,7 +26,8 @@ def get_spotify_oauth_client() -> dict | None:
             client_id=secrets['spotify']['client_id'],
             client_secret=secrets['spotify']['client_secret'],
             redirect_uri=secrets['spotify']['redirect_uri'],
-            scope=secrets['spotify']['scope']
+            scope=secrets['spotify']['scope'],
+            cache_handler=MemoryCacheHandler()
         )
 
         if oauth_client.is_token_expired(oauth_client.get_access_token()):

@@ -20,6 +20,8 @@ psycopg2-binary = "^2.9.9"
 python-multipart = "^0.0.6"
 openai = "^1.11.1"
 pytz = "^2024.1"
+spotipy = "^2.23.0"
+keyboard = "^0.13.5"
 
 [tool.poetry.group.dev]
 optional = true

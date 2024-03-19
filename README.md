@@ -1,4 +1,4 @@
-# Database pets
+# SiriAssistant
 
 ### how to run the project
 

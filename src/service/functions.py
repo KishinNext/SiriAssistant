@@ -171,7 +171,7 @@ def search_specific_song(
 
 async def play_spotify_music(func_params: FunctionPayload, **kwargs: dict) -> FunctionResult:
     try:
-        sp_client = get_spotify_client()
+        sp_client = await get_spotify_client()
         if sp_client is None:
             return FunctionResult(
                 function_id=func_params.function_id,

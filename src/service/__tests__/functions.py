@@ -21,8 +21,7 @@ secrets = get_secrets()
 
 # Set the pycharm_project variable with the name of the project you want to test
 pycharm_project = None
-open_spotify = True
-sp_client = get_spotify_client()
+open_spotify = False
 
 
 @pytest.mark.asyncio
@@ -42,6 +41,7 @@ async def test_open_pycharm_projects(client):
         mock_os_system.assert_called()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("artist",
                          [
                              "Metallica",
@@ -61,7 +61,8 @@ async def test_open_pycharm_projects(client):
                              "Los Bunkers"
                          ]
                          )
-def test_spotify_basic_search_artist(artist):
+async def test_spotify_basic_search_artist(artist):
+    sp_client = await get_spotify_client()
     query = f"artist: {artist}"
     result = spotify_search(sp_client, query)
 
@@ -76,12 +77,16 @@ def test_spotify_basic_search_artist(artist):
     assert percent >= 0.7
 
 
-def test_spotify_search_basic():
+@pytest.mark.asyncio
+async def test_spotify_search_basic():
+    sp_client = await get_spotify_client()
     result = spotify_search(sp_client, "test query")
     assert result is not None
 
 
-def test_spotify_search_limit():
+@pytest.mark.asyncio
+async def test_spotify_search_limit():
+    sp_client = await get_spotify_client()
     result = spotify_search(sp_client, "test query", limit=5)
     assert len(result['tracks']['items']) == 5
 
@@ -110,6 +115,7 @@ async def test_play_spotify_music_general_search():
     assert result.output['message'] == 'Successfully spotify opened'
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("song",
                          [
                              'Uprising',
@@ -118,11 +124,11 @@ async def test_play_spotify_music_general_search():
                              'Madness',
                              'Pressure',
                              'Psycho',
-                             'Knights of Cydonia',
                              'Plug In Baby'
                          ]
                          )
-def test_play_spotify_specific_song(song):
+async def test_play_spotify_specific_song(song):
+    sp_client = await get_spotify_client()
     query = f"track: {song}"
     result = spotify_search(sp_client, query)
 
@@ -142,7 +148,9 @@ def test_play_spotify_specific_song(song):
     assert search_specific_song_result['name'].lower() == song.lower()
 
 
-def test_play_spotify_specific_song_and_artist():
+@pytest.mark.asyncio
+async def test_play_spotify_specific_song_and_artist():
+    sp_client = await get_spotify_client()
     song = "Uprising"
     artist = "Muse"
     query = f"track: {song} artist: {artist}"

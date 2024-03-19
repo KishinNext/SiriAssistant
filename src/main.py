@@ -60,7 +60,7 @@ async def initialize_app():
     from src.auth.spotify import get_spotify_client
 
     logging.info('Check the necessary config...')
-    get_spotify_client()
+    await get_spotify_client()
     await check_connection()
     logging.info('Application initialized')
 

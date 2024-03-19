@@ -10,11 +10,13 @@ services:
 #      - .:/app
 #    ports:
 #      - '8080:8080'
+#    depends_on:
+#      - siri_assistant_database
   siri_assistant_database:
     container_name: siri_assistant_db
     mem_limit: 100m
     cpuset: "0"
-    image: ankane/pgvector
+    image: arm64v8/postgres:15
     environment:
       - POSTGRES_DB=siri_assistant
       - POSTGRES_PASSWORD=1234

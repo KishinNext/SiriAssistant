@@ -29,7 +29,7 @@ class ThreadsModel(BaseModel):
     expired_at: datetime = Field(
         None,
         example='2021-09-01 00:30:00',
-        description="The thread will expire after 30 minutes by default."
+        description="The thread will expire after 10 minutes by default."
     )
     created_at: Optional[datetime] = Field(None, example='2021-09-01 00:00:00')
     updated_at: Optional[datetime] = Field(None, example='2021-09-01 00:00:00')

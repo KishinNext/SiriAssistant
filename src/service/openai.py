@@ -2,15 +2,9 @@ from openai import OpenAI
 
 from src.models.assistant import AssistantModel
 from src.auth.utils import get_config, get_secrets
-
+from src.auth.openai import client
 secrets = get_secrets()
 config = get_config()
-
-client = OpenAI(
-    api_key=secrets['openai']['api_key'],
-    timeout=60,
-    max_retries=5
-)
 
 
 def list_available_assistants() -> list[dict[str, str]]:

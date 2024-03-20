@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta, timezone
 
-from openai import OpenAI
 from sqlalchemy.sql import select
 
+from src.auth.openai import client
 from src.auth.utils import get_config, get_secrets
 from src.data.utils import db
 from src.models.errors import Missing
@@ -10,11 +10,6 @@ from src.models.threads import ThreadsModel, ThreadsOrm
 
 secrets = get_secrets()
 config = get_config()
-client = OpenAI(
-    api_key=secrets['openai']['api_key'],
-    timeout=60,
-    max_retries=5
-)
 
 
 async def create(create_thread: ThreadsModel) -> ThreadsModel:

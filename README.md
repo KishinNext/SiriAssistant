@@ -36,7 +36,7 @@ secrets:
   env: development
   api_tokens:
     service: 'The 256 key generated in step 4'
-    token: 'The public token generated in step 5'
+    token: 'The public token generated in step 5, OPTIONAL: this is just for testing'
   openai:
     api_key: 'the openai api key'
     organization: 'org- your organization id'

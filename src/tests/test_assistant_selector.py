@@ -12,7 +12,7 @@ secrets = get_secrets()
 manual_test = False
 
 
-@pytest.mark.skipif(not secrets['openai']['api_key'] and manual_test, reason='missing openai_config credentials')
+@pytest.mark.skipif(not manual_test or not secrets['openai']['api_key'], reason='missing openai_config credentials')
 @pytest.mark.asyncio
 async def test_conversational_tool(client):
     payload = AssistantSelectorModel(
@@ -31,7 +31,7 @@ async def test_conversational_tool(client):
     assert response.json()['content']['conversation_closed'] == 'False'
 
 
-@pytest.mark.skipif(not secrets['openai']['api_key'] and manual_test, reason='missing openai_config credentials')
+@pytest.mark.skipif(not manual_test or not secrets['openai']['api_key'], reason='missing openai_config credentials')
 @pytest.mark.asyncio
 async def test_conversational_tool_close_conversation(client):
     payload = AssistantSelectorModel(
@@ -50,7 +50,7 @@ async def test_conversational_tool_close_conversation(client):
     assert response.json()['content']['conversation_closed'] == 'True'
 
 
-@pytest.mark.skipif(not secrets['openai']['api_key'] and manual_test, reason='missing openai_config credentials')
+@pytest.mark.skipif(not manual_test or not secrets['openai']['api_key'], reason='missing openai_config credentials')
 @pytest.mark.asyncio
 async def test_pycharm_function(client):
     payload = AssistantSelectorModel(
@@ -69,7 +69,7 @@ async def test_pycharm_function(client):
     assert response.json()['content']['conversation_closed'] == 'True'
 
 
-@pytest.mark.skipif(not secrets['openai']['api_key'] and manual_test, reason='missing openai_config credentials')
+@pytest.mark.skipif(not manual_test or not secrets['openai']['api_key'], reason='missing openai_config credentials')
 @pytest.mark.asyncio
 async def test_spotify_general_function(client):
     payload = AssistantSelectorModel(

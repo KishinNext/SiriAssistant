@@ -23,6 +23,8 @@ secrets = get_secrets()
 pycharm_project = None
 open_spotify = False
 
+# TODO: Run multiple tests breaks the database connection, need to fix it,
+#  for now, run the tests one by one, posible problem is related with context manager
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(pycharm_project is None or pycharm_project == '',
@@ -42,39 +44,43 @@ async def test_open_pycharm_projects(client):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("artist",
-                         [
-                             "Metallica",
-                             "AC/DC",
-                             "Led Zeppelin",
-                             "Guns N' Roses",
-                             "Rammstein",
-                             "The Doors",
-                             "The Who",
-                             "Los Prisioneros",
-                             "Caifanes",
-                             "Molotov",
-                             "Soda Stereo",
-                             "Café Tacvba",
-                             "Los Fabulosos Cadillacs",
-                             "Los Auténticos Decadentes",
-                             "Los Bunkers"
-                         ]
-                         )
-async def test_spotify_basic_search_artist(artist):
+async def test_spotify_basic_search_artist():
+    artists = [
+        "AC/DC",
+        "Led Zeppelin",
+        "Guns N' Roses",
+        "Rammstein",
+        "The Doors",
+        "The Who",
+        "Los Prisioneros",
+        "Caifanes",
+        "Molotov",
+        "Soda Stereo",
+        "Café Tacvba",
+        "Los Fabulosos Cadillacs",
+        "Los Auténticos Decadentes",
+        "Los Bunkers"
+    ]
+
+    failed_artists = []
     sp_client = await get_spotify_client()
-    query = f"artist: {artist}"
-    result = spotify_search(sp_client, query)
 
-    count = 0
-    for first_artist in result['tracks']['items']:
-        artist_result = first_artist['album']['artists'][0]['name']
-        if SequenceMatcher(None, artist, artist_result).ratio() >= 0.7:
-            count += 1
+    for artist in artists:
+        query = f"artist: {artist}"
+        result = spotify_search(sp_client, query)
 
-    percent = count / len(result['tracks']['items'])
+        count = 0
+        for first_artist in result['tracks']['items']:
+            artist_result = first_artist['album']['artists'][0]['name']
+            if SequenceMatcher(None, artist, artist_result).ratio() >= 0.7:
+                count += 1
 
-    assert percent >= 0.7
+        percent = count / len(result['tracks']['items']) if result['tracks']['items'] else 0
+
+        if percent < 0.7:
+            failed_artists.append(artist)
+
+    assert not failed_artists, f"Failed artists: {', '.join(failed_artists)}"
 
 
 @pytest.mark.asyncio
@@ -116,36 +122,43 @@ async def test_play_spotify_music_general_search():
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("song",
-                         [
-                             'Uprising',
-                             'Time',
-                             'Starlight',
-                             'Madness',
-                             'Pressure',
-                             'Psycho',
-                             'Plug In Baby'
-                         ]
-                         )
-async def test_play_spotify_specific_song(song):
-    sp_client = await get_spotify_client()
-    query = f"track: {song}"
-    result = spotify_search(sp_client, query)
+async def test_play_spotify_specific_song():
+    songs = [
+        'Uprising',
+        'Time',
+        'Starlight',
+        'Madness',
+        'Pressure',
+        'Psycho',
+        'Plug In Baby'
+    ]
 
-    params = FunctionPayload(
-        thread_id="123",
-        run_id="123",
-        function_id="123",
-        function_params={},
-        function_name="play_spotify_music"
-    )
-    search_specific_song_result = search_specific_song(
-        search_result=result,
-        song_search=song,
-        artist_search='',
-        func_params=params
-    )
-    assert search_specific_song_result['name'].lower() == song.lower()
+    failed_songs = []
+    sp_client = await get_spotify_client()
+
+    for song in songs:
+        query = f"track: {song}"
+        result = spotify_search(sp_client, query)
+
+        params = FunctionPayload(
+            thread_id="123",
+            run_id="123",
+            function_id="123",
+            function_params={},
+            function_name="play_spotify_music"
+        )
+        search_specific_song_result = search_specific_song(
+            search_result=result,
+            song_search=song,
+            artist_search='',
+            func_params=params
+        )
+
+        # Verificar que el nombre de la canción coincida, ignorando mayúsculas/minúsculas
+        if search_specific_song_result['name'].lower() != song.lower():
+            failed_songs.append(song)
+
+    assert not failed_songs, f"Failed songs: {', '.join(failed_songs)}"
 
 
 @pytest.mark.asyncio

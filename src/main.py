@@ -1,4 +1,3 @@
-import asyncio
 import logging
 
 from fastapi import Depends, FastAPI, HTTPException, status
@@ -6,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.auth.service import api_key_auth
 from src.auth.utils import get_config, get_secrets, setup_logging
-from src.data.utils import check_connection
 from src.routers import assistant_selector
 
 app = FastAPI(
@@ -54,19 +52,8 @@ async def root():
     return {"message": "Everything is fine."}
 
 
-async def initialize_app():
-    logging.info('Initializing application...')
-
-    from src.auth.spotify import get_spotify_client
-
-    logging.info('Check the necessary config...')
-    await get_spotify_client()
-    await check_connection()
-    logging.info('Application initialized')
-
-
 if __name__ == "__main__":
     import uvicorn
 
-    asyncio.run(initialize_app())
+    logging.info('App ready to accept requests...')
     uvicorn.run("main:app", reload=False, host="0.0.0.0", port=8080)

@@ -6,6 +6,7 @@ import pytest
 
 from src.auth.spotify import get_spotify_client
 from src.auth.utils import get_config, get_secrets
+from src.data.utils import sessionmanager
 from src.models.functions import FunctionPayload, FunctionsAvailables
 from src.service.functions import (
     open_pycharm_projects,
@@ -23,14 +24,23 @@ secrets = get_secrets()
 pycharm_project = None
 open_spotify = False
 
+
 # TODO: Run multiple tests breaks the database connection, need to fix it,
 #  for now, run the tests one by one, posible problem is related with context manager
+
+@pytest.fixture
+def db_session():
+    gg = sessionmanager.session()
+    yield gg
+    gg.close()
+
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(pycharm_project is None or pycharm_project == '',
                     reason="Pycharm project name for test is not set in the pycharm_project variable")
-async def test_open_pycharm_projects(client):
+async def test_open_pycharm_projects(db_session):
     payload = FunctionPayload(
+        db_session=db_session,
         thread_id='123',
         run_id='123',
         function_id='123',
@@ -44,7 +54,7 @@ async def test_open_pycharm_projects(client):
 
 
 @pytest.mark.asyncio
-async def test_spotify_basic_search_artist():
+async def test_spotify_basic_search_artist(db_session):
     artists = [
         "AC/DC",
         "Led Zeppelin",
@@ -63,7 +73,7 @@ async def test_spotify_basic_search_artist():
     ]
 
     failed_artists = []
-    sp_client = await get_spotify_client()
+    sp_client = await get_spotify_client(db_session)
 
     for artist in artists:
         query = f"artist: {artist}"
@@ -84,23 +94,25 @@ async def test_spotify_basic_search_artist():
 
 
 @pytest.mark.asyncio
-async def test_spotify_search_basic():
-    sp_client = await get_spotify_client()
+async def test_spotify_search_basic(db_session):
+    sp_client = await get_spotify_client(db_session)
     result = spotify_search(sp_client, "test query")
     assert result is not None
 
 
 @pytest.mark.asyncio
-async def test_spotify_search_limit():
-    sp_client = await get_spotify_client()
+async def test_spotify_search_limit(db_session):
+    sp_client = await get_spotify_client(db_session)
+    db_session.close()
     result = spotify_search(sp_client, "test query", limit=5)
     assert len(result['tracks']['items']) == 5
 
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(not open_spotify, reason="Manual test, set open_spotify to True to run")
-async def test_play_spotify_music_general_search():
+async def test_play_spotify_music_general_search(db_session):
     params = FunctionPayload(
+        db_session=db_session,
         thread_id="123",
         run_id="123",
         function_id="123",
@@ -122,7 +134,7 @@ async def test_play_spotify_music_general_search():
 
 
 @pytest.mark.asyncio
-async def test_play_spotify_specific_song():
+async def test_play_spotify_specific_song(db_session):
     songs = [
         'Uprising',
         'Time',
@@ -134,13 +146,14 @@ async def test_play_spotify_specific_song():
     ]
 
     failed_songs = []
-    sp_client = await get_spotify_client()
+    sp_client = await get_spotify_client(db_session)
 
     for song in songs:
         query = f"track: {song}"
         result = spotify_search(sp_client, query)
 
         params = FunctionPayload(
+            db_session=db_session,
             thread_id="123",
             run_id="123",
             function_id="123",
@@ -162,14 +175,16 @@ async def test_play_spotify_specific_song():
 
 
 @pytest.mark.asyncio
-async def test_play_spotify_specific_song_and_artist():
-    sp_client = await get_spotify_client()
+async def test_play_spotify_specific_song_and_artist(db_session):
+
+    sp_client = await get_spotify_client(db_session)
     song = "Uprising"
     artist = "Muse"
     query = f"track: {song} artist: {artist}"
     result = spotify_search(sp_client, query)
 
     params = FunctionPayload(
+        db_session=db_session,
         thread_id="123",
         run_id="123",
         function_id="123",
@@ -185,10 +200,12 @@ async def test_play_spotify_specific_song_and_artist():
     assert search_specific_song_result['name'].lower() == song.lower()
 
 
+
 @pytest.mark.asyncio
 @pytest.mark.skipif(not open_spotify, reason="Manual test, set open_spotify to True to run")
-async def test_play_spotify_music_specific_search():
+async def test_play_spotify_music_specific_search(db_session):
     params = FunctionPayload(
+        db_session=db_session,
         thread_id="123",
         run_id="123",
         function_id="123",

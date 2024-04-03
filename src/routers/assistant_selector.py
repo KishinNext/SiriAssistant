@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-
+from src.data.core import DBSessionDep
 from fastapi import APIRouter, Depends
 
 from src.auth.service import api_key_auth
@@ -20,9 +20,12 @@ router = APIRouter(
     response_model_exclude_none=False,
     dependencies=[Depends(api_key_auth)]
 )
-async def get_all(payload: AssistantSelectorModel) -> ResponseSchema | ErrorResponseSchema:
+async def get_all(
+        payload: AssistantSelectorModel,
+        db_session: DBSessionDep,
+) -> ResponseSchema | ErrorResponseSchema:
     try:
-        result = await service.post_messages(payload)
+        result = await service.post_messages(db_session, payload)
         logging.info(result)
         return ResponseSchema(
             status_code=200,

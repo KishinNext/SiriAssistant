@@ -9,12 +9,12 @@ from src.auth.utils import get_secrets
 from src.data.spotify import create
 from src.data.spotify import get_the_last_token
 from src.models.spotify import SpotifyTokensModel
-
+from sqlalchemy.ext.asyncio import AsyncSession
 secrets = get_secrets()
 
 
-async def get_spotify_client() -> spotipy.Spotify | None:
-    last_token = await get_the_last_token()
+async def get_spotify_client(db_session: AsyncSession) -> spotipy.Spotify | None:
+    last_token = await get_the_last_token(db_session)
     access_token = last_token.access_token
 
     if access_token is None:

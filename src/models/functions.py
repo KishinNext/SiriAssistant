@@ -13,6 +13,7 @@ class FunctionsAvailables(StrEnum):
 
 
 class FunctionPayload(BaseModel):
+    db_session: object = Field(..., description="Database session")
     thread_id: str = Field(..., description="Thread id")
     run_id: str = Field(..., description="Run id")
     function_id: str = Field(..., description="Function id given by OpenAI")

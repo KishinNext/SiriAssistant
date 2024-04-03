@@ -3,6 +3,8 @@ import logging
 import re
 from datetime import datetime
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.models.assistant_selector import AssistantSelectorModel
 from src.models.functions import FunctionPayload
 from src.service.functions import return_output_functions
@@ -11,8 +13,8 @@ from src.service.openai import get_assistants
 from src.service.threads import get_thread
 
 
-async def post_messages(payload: AssistantSelectorModel):
-    thread = await get_thread()
+async def post_messages(db_session: AsyncSession, payload: AssistantSelectorModel):
+    thread = await get_thread(db_session)
     assistant = get_assistants()['SiriSelectorAssistant']
 
     for message in payload.messages:
@@ -52,6 +54,7 @@ async def post_messages(payload: AssistantSelectorModel):
                 if function_call.type == 'function':
                     result_data = await return_output_functions(
                         FunctionPayload(
+                            db_session=db_session,
                             thread_id=thread.id,
                             run_id=run.id,
                             function_name=function_call.function.name,

@@ -3,8 +3,10 @@ from contextlib import asynccontextmanager
 
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError, TimeoutError
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import (
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from src.auth.utils import get_secrets
 
@@ -30,7 +32,7 @@ class DatabaseSession:
 
     def __init__(self):
         self.engine = create_async_engine(DB_CONFIG, echo=False, future=True)
-        self.session = sessionmaker(self.engine, expire_on_commit=True, class_=AsyncSession)
+        self.session = async_sessionmaker(expire_on_commit=True, bind=self.engine)
 
     @asynccontextmanager
     async def session_scope(self):
@@ -46,4 +48,9 @@ class DatabaseSession:
             await session.close()
 
 
-db = DatabaseSession()
+sessionmanager = DatabaseSession()
+
+
+async def get_db_session():
+    async with sessionmanager.session_scope() as session:
+        yield session

@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta, timezone
 
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import select
 
 from src.auth.openai import client
 from src.auth.utils import get_config, get_secrets
-from src.data.utils import db
 from src.models.errors import Missing
 from src.models.threads import ThreadsModel, ThreadsOrm
 
@@ -12,7 +12,7 @@ secrets = get_secrets()
 config = get_config()
 
 
-async def create(create_thread: ThreadsModel) -> ThreadsModel:
+async def create(db_session: AsyncSession, create_thread: ThreadsModel) -> ThreadsModel:
     create_thread = client.beta.threads.create(
         metadata=create_thread.metadata_info
     )
@@ -27,35 +27,32 @@ async def create(create_thread: ThreadsModel) -> ThreadsModel:
 
     thread_orm = ThreadsOrm(**thread_info)
 
-    async with db.session_scope() as session:
-        session.add(thread_orm)
-        return ThreadsModel.model_validate(thread_orm)
+    db_session.add(thread_orm)
+    return ThreadsModel.model_validate(thread_orm)
 
 
-async def get_by_id(thread_id: str) -> ThreadsModel:
-    async with db.session_scope() as session:
-        query = select(ThreadsOrm).where(ThreadsOrm.id == thread_id)
-        result = (await session.execute(query)).scalar_one_or_none()
-        if result is None:
-            raise Missing(msg=f"Thread {thread_id} not found")
+async def get_by_id(db_session: AsyncSession, thread_id: str) -> ThreadsModel:
+    query = select(ThreadsOrm).where(ThreadsOrm.id == thread_id)
+    result = (await db_session.execute(query)).scalar_one_or_none()
+    if result is None:
+        raise Missing(msg=f"Thread {thread_id} not found")
 
-        thread_data = ThreadsModel.model_validate(result)
+    thread_data = ThreadsModel.model_validate(result)
 
     return thread_data
 
 
-async def get_the_last_thread() -> ThreadsModel:
-    async with db.session_scope() as session:
-        query = select(ThreadsOrm).order_by(ThreadsOrm.created_at.desc()).limit(1)
-        result = (await session.execute(query)).scalar_one_or_none()
-        if result is None:
-            create_result = await create(ThreadsModel())
-            result = await get_by_id(create_result.id)
+async def get_the_last_thread(db_session: AsyncSession) -> ThreadsModel:
+    query = select(ThreadsOrm).order_by(ThreadsOrm.created_at.desc()).limit(1)
+    result = (await db_session.execute(query)).scalar_one_or_none()
+    if result is None:
+        create_result = await create(db_session, ThreadsModel())
+        result = await get_by_id(db_session, create_result.id)
 
+    thread_data = ThreadsModel.model_validate(result)
+    if thread_data.expired_at < datetime.now(timezone.utc):
+        create_result = await create(db_session, ThreadsModel())
+        result = await get_by_id(db_session, create_result.id)
         thread_data = ThreadsModel.model_validate(result)
-        if thread_data.expired_at < datetime.now(timezone.utc):
-            create_result = await create(ThreadsModel())
-            result = await get_by_id(create_result.id)
-            thread_data = ThreadsModel.model_validate(result)
 
     return thread_data
